@@ -20,103 +20,88 @@ namespace KPO_hw.Controllers
         {
             _context = context;
         }
-
-        // GET: api/Order
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Dish>>> GetDish()
-        {
-          if (_context.Dish == null)
-          {
-              return NotFound();
-          }
-            return await _context.Dish.ToListAsync();
-        }
-
-        // GET: api/Order/5
+        
         [HttpGet("{id}")]
-        public async Task<ActionResult<Dish>> GetDish(int id)
+        public async Task<ActionResult<Order>> GetOrder(int id)
         {
-          if (_context.Dish == null)
+          if (_context.Order == null)
           {
-              return NotFound();
+              return NotFound("Order doesn't exist.");
           }
-            var dish = await _context.Dish.FindAsync(id);
+            var order = await _context.Order.FindAsync(id);
 
-            if (dish == null)
+            if (order == null)
             {
-                return NotFound();
+                return NotFound("Order doesn't exist.");
             }
 
-            return dish;
+            return order;
         }
-
-        // PUT: api/Order/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutDish(int id, Dish dish)
-        {
-            if (id != dish.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(dish).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!DishExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/Order
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        
         [HttpPost]
-        public async Task<ActionResult<Dish>> PostDish(Dish dish)
+        public async Task<ActionResult<Order>> PostOrder(UserOrder userOrder)
         {
           if (_context.Dish == null)
           {
               return Problem("Entity set 'DataContext.Dish'  is null.");
           }
-            _context.Dish.Add(dish);
-            await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetDish", new { id = dish.Id }, dish);
+          if (_context.User != null)
+          {
+              var user = _context.User.FirstOrDefault(u => u.UserName == userOrder.UserName);
+              if (user == null)
+              {
+                  return NotFound("Username doesn't exist.");
+              }
+              var dishList = new List<KeyValuePair<Dish, int>>();
+              foreach (var item in userOrder.DishList)
+              {
+                  var dish = _context.Dish.FirstOrDefault(d => d.Name == item.Name);
+                  if (dish == null)
+                  {
+                      return NotFound("Dish doesn't exist in the menu.");
+                  }
+
+                  if (dish.Quantity < item.Quantity)
+                  {
+                      return Problem("Requested quantity of dish cannot be provided.");
+                  }
+                  dishList.Add(new KeyValuePair<Dish, int>(dish, item.Quantity));
+              }
+              Order order = new Order();
+              order.Status = "in wait";
+              order.UserId = user.Id;
+              order.CreatedAt = DateTime.Now;
+              order.UpdatedAt = DateTime.Now;
+              order.SpecialRequests = userOrder.SpecialRequests;
+              _context.Order.Add(order);
+              await _context.SaveChangesAsync();
+              order.ChangeStatus(order, _context);
+              foreach (var item in dishList)
+              {
+                  var orderDish = new OrderDish();
+                  orderDish.OrderId = order.Id;
+                  orderDish.DishId = item.Key.Id;
+                  orderDish.Quantity = item.Value;
+                  orderDish.Price = item.Key.Price;
+                  _context.OrderDish.Add(orderDish);
+                  await _context.SaveChangesAsync();
+                  item.Key.Quantity -= item.Value;
+                  if (item.Key.Quantity == 0)
+                  {
+                      item.Key.IsAvailable = false;
+                  }
+                  await _context.SaveChangesAsync();
+              }
+              return Ok("Order created. Order Id is: " + order.Id.ToString());
+          }
+          else
+          {
+              return Problem("Entity set 'DataContext.User'  is null.");
+          }
         }
 
-        // DELETE: api/Order/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteDish(int id)
-        {
-            if (_context.Dish == null)
-            {
-                return NotFound();
-            }
-            var dish = await _context.Dish.FindAsync(id);
-            if (dish == null)
-            {
-                return NotFound();
-            }
-
-            _context.Dish.Remove(dish);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool DishExists(int id)
+        private bool OrderExists(int id)
         {
             return (_context.Dish?.Any(e => e.Id == id)).GetValueOrDefault();
         }
