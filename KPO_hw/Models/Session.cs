@@ -11,7 +11,7 @@ public class Session
     [Column("user_id")]
     public int UserId { get; set; }
     [Column("session_token")]
-    public string SessionToken { get; set; }
+    public string? SessionToken { get; set; }
     [Column("expires_at")]
     public DateTime ExpiresAt { get; set; }
 }

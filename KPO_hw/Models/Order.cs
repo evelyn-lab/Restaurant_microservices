@@ -11,9 +11,9 @@ public class Order
     [Column("user_id")]
     public int UserId { get; set; }
     [Column("status")]
-    public string Status { get; set; }
+    public string? Status { get; set; }
     [Column("special_requests")]
-    public string SpecialRequests { get; set; }
+    public string? SpecialRequests { get; set; }
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
     [Column("updated_at")]

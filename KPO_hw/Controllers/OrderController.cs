@@ -7,69 +7,61 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KPO_hw.Context;
 using KPO_hw.Models;
-using Microsoft.AspNetCore.Authorization;
 
 namespace KPO_hw.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class DishController : ControllerBase
+    public class OrderController : ControllerBase
     {
         private readonly DataContext _context;
 
-        public DishController(DataContext context)
+        public OrderController(DataContext context)
         {
             _context = context;
         }
-        
+
+        // GET: api/Order
         [HttpGet]
-        [Authorize(Roles = "manager")]
         public async Task<ActionResult<IEnumerable<Dish>>> GetDish()
         {
-            if (!User.IsInRole("manager"))
-            {
-                return Problem("Role has to be manager");
-            }
-            if (_context.Dish == null) 
-            {
-              return NotFound("Dish database is empty"); 
-            }
+          if (_context.Dish == null)
+          {
+              return NotFound();
+          }
             return await _context.Dish.ToListAsync();
         }
-        
+
+        // GET: api/Order/5
         [HttpGet("{id}")]
-        [Authorize(Roles = "manager")]
         public async Task<ActionResult<Dish>> GetDish(int id)
         {
-            if (!User.IsInRole("manager"))
-            {
-                return Problem("Role has to be manager");
-            }
-            if (_context.Dish == null)
-            {
-                return NotFound("Dish database is empty");
-            }
+          if (_context.Dish == null)
+          {
+              return NotFound();
+          }
             var dish = await _context.Dish.FindAsync(id);
+
             if (dish == null)
             {
-                return NotFound("No dish with such id");
+                return NotFound();
             }
+
             return dish;
         }
 
+        // PUT: api/Order/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        [Authorize(Roles = "manager")]
         public async Task<IActionResult> PutDish(int id, Dish dish)
         {
-            if (!User.IsInRole("manager"))
-            {
-                return Problem("Role has to be manager");
-            }
             if (id != dish.Id)
             {
                 return BadRequest();
             }
+
             _context.Entry(dish).State = EntityState.Modified;
+
             try
             {
                 await _context.SaveChangesAsync();
@@ -85,38 +77,29 @@ namespace KPO_hw.Controllers
                     throw;
                 }
             }
+
             return NoContent();
         }
 
+        // POST: api/Order
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        [Authorize(Roles = "manager")]
-        public async Task<ActionResult<Dish>> PostDish(DishInput dishInput)
+        public async Task<ActionResult<Dish>> PostDish(Dish dish)
         {
-            if (!User.IsInRole("manager"))
-            {
-                return Problem("Role has to be manager");
-            }
-            Dish dish = new Dish();
-            dish.Name = dishInput.Name;
-            dish.Description = dishInput.Description;
-            dish.Price = dishInput.Price;
-            dish.Quantity = dishInput.Quantity;
-            dish.IsAvailable = true;
-            dish.CreatedAt = DateTime.Now;
-            dish.UpdatedAt = DateTime.Now;
-            _context.Dish?.Add(dish);
+          if (_context.Dish == null)
+          {
+              return Problem("Entity set 'DataContext.Dish'  is null.");
+          }
+            _context.Dish.Add(dish);
             await _context.SaveChangesAsync();
+
             return CreatedAtAction("GetDish", new { id = dish.Id }, dish);
         }
-        
+
+        // DELETE: api/Order/5
         [HttpDelete("{id}")]
-        [Authorize(Roles = "manager")]
         public async Task<IActionResult> DeleteDish(int id)
         {
-            if (!User.IsInRole("manager"))
-            {
-                return Problem("Role has to be manager");
-            }
             if (_context.Dish == null)
             {
                 return NotFound();

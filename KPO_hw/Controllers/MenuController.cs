@@ -45,7 +45,6 @@ namespace KPO_hw.Controllers
           }
           return Ok(text);
         }
-
         private bool DishExists(int id)
         {
             return (_context.Dish?.Any(e => e.Id == id)).GetValueOrDefault();

@@ -9,13 +9,13 @@ public class User
     [Column("id")]
     public int Id { get; set; }
     [Column("username")]
-    public string UserName { get; set; }
+    public string? UserName { get; set; }
     [Column("email")]
-    public string Email { get; set; }
+    public string? Email { get; set; }
     [Column("password_hash")]
-    public string Password { get; set; }
+    public string? Password { get; set; }
     [Column("role")]
-    public string Role { get; set; }
+    public string? Role { get; set; }
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
     [Column("updated_at")]
