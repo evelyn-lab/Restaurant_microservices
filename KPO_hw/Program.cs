@@ -7,12 +7,12 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
-
+// Создание объекта WebApplication с использованием CreateBuilder для настройки приложения ASP.NET Core
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
+// Добавление службы контроллеров в контейнер служб
 builder.Services.AddControllers();
+// Настройка Swagger для генерации документации API
 builder.Services.AddSwaggerGen(c =>
 {
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -38,6 +38,8 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
+// Добавление службы аутентификации с использованием схемы аутентификации JwtBearer
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -52,25 +54,33 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
     });
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+// Добавление службы для обнаружения и описания конечных точек API
 builder.Services.AddEndpointsApiExplorer();
+// Добавление службы Swagger для генерации документации API
 builder.Services.AddSwaggerGen();
+// Добавление службы контекста базы данных с использованием провайдера PostgreSQL
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Создание объекта приложения
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Использование Swagger и Swagger UI для просмотра и тестирования API.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+// Перенаправление запросов HTTP на HTTPS
 app.UseHttpsRedirection();
+// Использование службы аутентификации
 app.UseAuthentication();
+// Использование службы авторизации
 app.UseAuthorization();
 
+// Настройка маршрутизации для контроллеров
 app.MapControllers();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
+// Запуск приложения
 app.Run();
