@@ -2,9 +2,14 @@ namespace KPO_hw.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+/*
+ *  Aтрибут указывает, что класс Dish соответствует таблице
+ *  "dish" в базе данных.
+ */
 [Table("dish")]
 public class Dish
 {
+    // Атрибут указывает, что свойство Id - первичный ключ для таблицы
     [Key]
     [Column("id")]
     public int Id { get; set; }

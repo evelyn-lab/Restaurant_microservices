@@ -2,9 +2,14 @@ namespace KPO_hw.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+/*
+ *  Aтрибут указывает, что класс Session соответствует таблице
+ *  "session" в базе данных.
+ */
 [Table("session")]
 public class Session
 {
+    // Атрибут указывает, что свойство Id - первичный ключ для таблицы
     [Key]
     [Column("id")]
     public int Id { get; set; }

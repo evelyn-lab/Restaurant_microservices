@@ -10,16 +10,22 @@ using KPO_hw.Models;
 
 namespace KPO_hw.Controllers
 {
+    // Атрибут указывает маршрут, по которому будет доступен контроллер.
     [Route("api/[controller]")]
+    // Атрибут указывает, что данный контроллер является контроллером API
     [ApiController]
+    
+    // Класс контроллера предоставелния информации о пользователе
     public class UserController : ControllerBase
     {
+        // Контекст данных для взаимодействия с базой данных
         private readonly DataContext _context;
         public UserController(DataContext context)
         {
             _context = context;
         }
-        // GET: api/User/token
+        // Данное действие будет обрабатывать HTTP GET запросы
+        // {token} - это параметр пути, который будет передавать значение токена в URL запроса
         [HttpGet("{token}")]
         public async Task<ActionResult<User>> GetSession(string token)
         {
@@ -27,13 +33,15 @@ namespace KPO_hw.Controllers
           {
               return NotFound();
           }
+          //  Получение сессии из базы данных по токену
           var session = _context.Session.FirstOrDefault(s => s.SessionToken == token);
           if (session == null)
           {
               return NotFound("Token doesn't exist");
           }
-          var user = _context.User.FirstOrDefault(u => u.Id == session.UserId);
-          return user;
+          // Получение пользователя из базы данных по соотнесению Id и UserId сессии
+          var user = _context.User!.FirstOrDefault(u => u.Id == session.UserId);
+          return user!;
         }
     }
 }

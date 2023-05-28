@@ -2,9 +2,14 @@ namespace KPO_hw.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+/*
+ *  Aтрибут указывает, что класс User соответствует таблице
+ *  "user" в базе данных.
+ */
 [Table("user")]
 public class User
 {
+    // Атрибут указывает, что свойство Id - первичный ключ для таблицы
     [Key]
     [Column("id")]
     public int Id { get; set; }

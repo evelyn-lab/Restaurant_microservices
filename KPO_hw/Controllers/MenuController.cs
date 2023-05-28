@@ -13,23 +13,29 @@ using KPO_hw.Models;
 
 namespace KPO_hw.Controllers
 {
+    // Атрибут указывает маршрут, по которому будет доступен контроллер.
     [Route("api/[controller]")]
+    // Атрибут указывает, что данный контроллер является контроллером API
     [ApiController]
+    
+    // Класс контроллера предоставления меню
     public class MenuController : ControllerBase
     {
+        // Контекст данных для взаимодействия с базой данных
         private readonly DataContext _context;
 
         public MenuController(DataContext context)
         {
             _context = context;
         }
-
-        // GET: api/Menu
+        
+        // Метод обработки HTTP GET-запроса для получения информации о меню
         [HttpGet]
         public IActionResult GetMenu()
         {
           if (_context.Dish == null)
           {
+              // Возвращается ошибка 404 и сообщение "Menu is empty"
               return NotFound("Menu is empty");
           }
           string text = "";
@@ -43,11 +49,8 @@ namespace KPO_hw.Controllers
                   text += "Quantity: " + dish.Quantity + "\n\n";
               }
           }
+          // Возвращается ответ с успешным кодом 200 и текстом, содержащим информацию о меню
           return Ok(text);
-        }
-        private bool DishExists(int id)
-        {
-            return (_context.Dish?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }

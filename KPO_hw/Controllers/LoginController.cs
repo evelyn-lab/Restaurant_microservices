@@ -12,26 +12,30 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace KPO_hw.Controllers
 {
+    // Атрибут указывает маршрут, по которому будет доступен контроллер.
     [Route("api/[controller]")]
+    // Атрибут указывает, что данный контроллер является контроллером API
     [ApiController]
 
+    // Класс контроллера входа пользователя в систему
     public class LoginController : ControllerBase
     {
-        private IConfiguration _configuration;
-        private DataContext _context;
+        private readonly IConfiguration _configuration;
         
+        // Контекст данных для взаимодействия с базой данных
+        private readonly DataContext _context;
+        
+        // Метод хеширования пароля пользователя с использованием алгоритма MD5
         private static string PasswordHash(string password)
         {
-            using (var hashAlg = MD5.Create())
+            using var hashAlg = MD5.Create();
+            byte[] hash = hashAlg.ComputeHash(Encoding.UTF8.GetBytes(password));
+            var builder = new StringBuilder(hash.Length * 2);
+            foreach (var t in hash)
             {
-                byte[] hash = hashAlg.ComputeHash(Encoding.UTF8.GetBytes(password));
-                var builder = new StringBuilder(hash.Length * 2);
-                for (int i = 0; i < hash.Length; i++)
-                {
-                    builder.Append(hash[i].ToString("X2"));
-                }
-                return builder.ToString();
+                builder.Append(t.ToString("X2"));
             }
+            return builder.ToString();
         }
         
         public LoginController(IConfiguration configuration, DataContext context)
@@ -39,6 +43,8 @@ namespace KPO_hw.Controllers
             _configuration = configuration;
             _context = context;
         }
+        
+        // Метод, обрабатывающий HTTP POST-запрос для входа пользователя
         [HttpPost]
         public async Task<ActionResult<Session>> LoginProcess([FromBody] Login login)
         {
@@ -46,24 +52,30 @@ namespace KPO_hw.Controllers
             if (user != null)
             {
                 string token = Generate(user);
-                Session currentSession = new();
-                currentSession.UserId = user.Id;
-                currentSession.SessionToken = token;
-                currentSession.ExpiresAt = DateTime.Now.AddDays(1);
-                _context.Session.Add(currentSession);
+                Session currentSession = new()
+                {
+                    UserId = user.Id,
+                    SessionToken = token,
+                    ExpiresAt = DateTime.Now.AddDays(1)
+                };
+                _context.Session!.Add(currentSession);
                 await _context.SaveChangesAsync();
                 return Ok("Authorization success. Token: " + token);
             }
             return NotFound("User not found");
         }
-
+        
+        /*
+         * Метод для генерации JWT-токена на основе роли пользователя.
+         * Создает и подписывает токен с помощью класса JwtSecurityTokenHandler и возвращает его в виде строки.
+         */
         private string Generate(User user)
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             var claims = new[]
             {
-                new Claim(ClaimTypes.Role, user.Role)
+                new Claim(ClaimTypes.Role, user.Role!)
             };
             var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],
                 _configuration["Jwt:Audience"],
@@ -74,12 +86,16 @@ namespace KPO_hw.Controllers
             return result;
         }
 
-        private User Authentication(Login login)
+        /*
+         * Метод для аутентификации пользователя.
+         * Проверяет соответствие введенных пользователем данных с данными в базе данных.
+         */
+        private User? Authentication(Login login)
         {
-            User currentUser = null;
-            foreach (User user in _context.User)
+            User? currentUser = null;
+            foreach (User user in _context.User!)
             {
-                if (user.Email.ToLower() == login.Email.ToLower() && user.Password == PasswordHash(login.Password))
+                if (user.Email!.ToLower() == login.Email!.ToLower() && user.Password == PasswordHash(login.Password!))
                 {
                     currentUser = user;
                 }
@@ -90,7 +106,5 @@ namespace KPO_hw.Controllers
             }
             return null;
         }
-        
-        
     }
 }
